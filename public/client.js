@@ -100,6 +100,10 @@ var processWebSSHStatusChangeRequest = function (newStatusReq) {
         document.getElementById('status').innerHTML = 'CONTAINER(S) STARTED. WAITING FOR ALL SERVICES TO START';
         if (waRestart) {
             checkAvailability('client.js', 2000, true);
+        } else {
+            setTimeout(function () {
+                checkAvailability('client.js', 2000, true);
+            }, 20000);
         }
     } else if (retCode === 'LSiteNotStarted') {
         document.getElementById('status').style.backgroundColor = 'blue';
