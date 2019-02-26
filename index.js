@@ -58,7 +58,18 @@ app.use(express.static(__dirname + '/webssh/public')).use(function(req, res, nex
                 if (err) {
                     config.ssh.host = 'Couldnt connect to main site container';
                 } else {
-                    config.ssh.host = data;
+                    // Check for port
+                    var portloc = data.indexOf(':');
+                    if(portloc > -1)
+                    {
+                        config.ssh.host = data.substr(0, portloc);
+                        config.ssh.port = data.substr(portloc + 1, data.length - config.ssh.host.length - 1);
+                        console.log('Port from file: ' + config.ssh.port);
+                    }
+                    else 
+                    {
+                        config.ssh.host = data;
+                    }
                     console.log('Host from file: ' + config.ssh.host);
                 }
             });
