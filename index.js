@@ -58,24 +58,11 @@ app.use(express.static(__dirname + '/webssh/public')).use(function(req, res, nex
                 if (err) {
                     config.ssh.host = 'Couldnt connect to main site container';
                 } else {
-                    // Check for port
-                    var portloc = data.indexOf(':');
-                    if(portloc > -1)
-                    {
-                        config.ssh.host = data.substr(0, portloc);
-                        config.ssh.port = data.substr(portloc + 1, data.length - config.ssh.host.length - 1);
-                        console.log('Port from file: ' + config.ssh.port);
-                    }
-                    else 
-                    {
-                        config.ssh.host = data;
-                    }
-                    console.log('Host from file: ' + config.ssh.host);
+                    configureSshFromString(data);
                 }
             });
         } else {
-            config.ssh.host = data;
-            console.log('Host from file: ' + config.ssh.host);
+            configureSshFromString(data);
         }
     });
 
@@ -201,3 +188,19 @@ io.sockets.on('connection', function (socket) {
     }
     checkStatusFileContents();
 });
+
+function configureSshFromString(instr)
+{
+    var portloc = instr.indexOf(':');
+    if(portloc > -1)
+    {
+        config.ssh.host = instr.substr(0, portloc);
+        config.ssh.port = instr.substr(portloc + 1, instr.length - config.ssh.host.length - 1);
+        console.log('Port from file: ' + config.ssh.port);
+    }
+    else 
+    {
+        config.ssh.host = instr;
+    }
+    console.log('Host from file: ' + config.ssh.host);
+}
