@@ -51,7 +51,6 @@ app.use(express.static(__dirname + '/webssh/public')).use(function(req, res, nex
     } else {*/
     config.user.name = 'root';
     config.user.password = 'Docker!';
-    config.ssh.port = 2222;
     fs.readFile('/appsvctmp/ipaddr_' + process.env.WEBSITE_ROLE_INSTANCE_ID, 'utf8', function (err, data) {
         if (err) {
             fs.readFile('/home/site/ipaddr_' + process.env.WEBSITE_ROLE_INSTANCE_ID, 'utf8', function (err, data) {
@@ -189,8 +188,10 @@ io.sockets.on('connection', function (socket) {
     checkStatusFileContents();
 });
 
+// Parse a string in IP or IP:PORT format and set the configs accordingly
 function configureSshFromString(instr)
 {
+    // Check if port exists
     var portloc = instr.indexOf(':');
     if(portloc > -1)
     {
@@ -201,6 +202,7 @@ function configureSshFromString(instr)
     else 
     {
         config.ssh.host = instr;
+        config.ssh.port = 2222;
     }
     console.log('Host from file: ' + config.ssh.host);
 }
