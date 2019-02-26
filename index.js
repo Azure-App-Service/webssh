@@ -51,20 +51,17 @@ app.use(express.static(__dirname + '/webssh/public')).use(function(req, res, nex
     } else {*/
     config.user.name = 'root';
     config.user.password = 'Docker!';
-    config.ssh.port = 2222;
     fs.readFile('/appsvctmp/ipaddr_' + process.env.WEBSITE_ROLE_INSTANCE_ID, 'utf8', function (err, data) {
         if (err) {
             fs.readFile('/home/site/ipaddr_' + process.env.WEBSITE_ROLE_INSTANCE_ID, 'utf8', function (err, data) {
                 if (err) {
                     config.ssh.host = 'Couldnt connect to main site container';
                 } else {
-                    config.ssh.host = data;
-                    console.log('Host from file: ' + config.ssh.host);
+                    configureSshFromString(data);
                 }
             });
         } else {
-            config.ssh.host = data;
-            console.log('Host from file: ' + config.ssh.host);
+            configureSshFromString(data);
         }
     });
 
@@ -190,3 +187,22 @@ io.sockets.on('connection', function (socket) {
     }
     checkStatusFileContents();
 });
+
+// Parse a string in IP or IP:PORT format and set the configs accordingly
+function configureSshFromString(instr)
+{
+    // Check if port exists
+    var portloc = instr.indexOf(':');
+    if(portloc > -1)
+    {
+        config.ssh.host = instr.substr(0, portloc);
+        config.ssh.port = instr.substr(portloc + 1, instr.length - config.ssh.host.length - 1);
+        console.log('Port from file: ' + config.ssh.port);
+    }
+    else 
+    {
+        config.ssh.host = instr;
+        config.ssh.port = 2222;
+    }
+    console.log('Host from file: ' + config.ssh.host);
+}
