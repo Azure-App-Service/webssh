@@ -9,7 +9,8 @@
   },
   "ssh": {
     "host": "",
-    "port": 2222
+    "port": 2222,
+    "kuduDebugReq": false
   },
   "header": {
     "text": "SSH",
