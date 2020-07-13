@@ -43,7 +43,7 @@ app.use(express.static(__dirname + '/webssh/public')).use(function (req, res, ne
         if (req.query.debugconsolereq != null) {
             // Use the runtime User for Kudu, and the dynamically generated password during the startup
             config.user.name = process.env.USER_NAME;
-            config.user.password = process.env.USER_PASSWORD.trim();
+            config.user.password = process.env.USER_PASSWORD;
             config.ssh.host = "127.0.0.6";
             config.ssh.port = 22;
             config.ssh.kuduDebugReq = true;
