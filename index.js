@@ -1,8 +1,8 @@
 /*
  * WebSSH2 - Web to SSH2 gateway
  * Bill Church - https://github.com/billchurch - April 2016
- *
  */
+
 var express = require('express');
 var app = express();
 var cookieParser = require('cookie-parser');
@@ -16,7 +16,7 @@ var fs = require('fs');
 var basicAuth = require('basic-auth');
 var ssh = require('ssh2');
 var readConfig = require('read-config'),
-    config = readConfig(__dirname + '/config.json');
+config = readConfig(__dirname + '/config.json');
 var myError = " - ";
 var serverStatusFile = "/appsvctmp/status.txt";
 
@@ -39,24 +39,18 @@ server.listen({
 });
 
 app.use(express.static(__dirname + '/webssh/public')).use(function (req, res, next) {
-    /*var myAuth = basicAuth(req);
-    if (myAuth === undefined) {
-        res.statusCode = 401;
-        res.setHeader('WWW-Authenticate', 'Basic realm="WebSSH"');
-        res.end('Username and password required for web SSH service.');
-    } else if (myAuth.name == "") {
-        res.statusCode = 401
-        res.setHeader('WWW-Authenticate', 'Basic realm="WebSSH"');
-        res.end('Username and password required for web SSH service.');
-    } else {*/
-    config.user.name = 'root';
-    config.user.password = 'Docker!';
     if (req.originalUrl != null && req.originalUrl.includes("webssh/host")) {
         if (req.query.debugconsolereq != null) {
+            // Use the runtime User for Kudu, and the dynamically generated password during the startup
+            config.user.name = process.env.USER_NAME;
+            config.user.password = process.env.USER_PASSWORD;
             config.ssh.host = "127.0.0.6";
             config.ssh.port = 22;
             config.ssh.kuduDebugReq = true;
         } else {
+            // Default value of WEBSITE_SSH_USER=root, WEBSITE_SSH_PASSWORD=Docker!
+            config.user.name = process.env.WEBSITE_SSH_USER;
+            config.user.password = process.env.WEBSITE_SSH_PASSWORD;
             config.ssh.port = 2222;
             fs.readFile('/appsvctmp/ipaddr_' + process.env.WEBSITE_ROLE_INSTANCE_ID, 'utf8', function (err, data) {
                 if (err) {
@@ -73,13 +67,10 @@ app.use(express.static(__dirname + '/webssh/public')).use(function (req, res, ne
             });
         }
     }
-
     next();
-    //}
 }).use('/webssh/socket.io', express.static(__dirname + '/node_modules/socket.io-client/dist')).use('/webssh/client.js', express.static(__dirname + '/public/client.js')).use('/webssh/style', express.static(__dirname + '/public')).use('/webssh/src', express.static(__dirname + '/node_modules/xterm/dist')).use('/webssh/addons', express.static(__dirname + '/node_modules/xterm/dist/addons'))
     .use(cookieParser()).get('/webssh/host/:host?', function (req, res) {
         res.sendFile(path.join(__dirname + '/public/client.htm'));
-        config.ssh.host = req.params.host;
         console.log('Host: ' + config.ssh.host);
         if (typeof req.query.port !== 'undefined' && req.query.port !== null) {
             config.ssh.port = req.query.port;
@@ -93,7 +84,6 @@ app.use(express.static(__dirname + '/webssh/public')).use(function (req, res, ne
         console.log('webssh2 Login: user=' + config.user.name + ' from=' + req.ip + ' host=' + config.ssh.host + ' port=' + config.ssh.port + ' sessionID=' + req.headers['sessionid'] + ' allowreplay=' + req.headers['allowreplay']);
         console.log('Headers: ' + JSON.stringify(req.headers));
         config.options.allowreplay = req.headers['allowreplay'];
-
     });
 
 io.on('connection', function (socket) {
@@ -207,8 +197,7 @@ function configureSshFromString(instr) {
         config.ssh.host = instr.substr(0, portloc);
         config.ssh.port = instr.substr(portloc + 1, instr.length - config.ssh.host.length - 1);
         console.log('Port from file: ' + config.ssh.port);
-    }
-    else {
+    } else {
         config.ssh.host = instr;
         config.ssh.port = 2222;
     }
