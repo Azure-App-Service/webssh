@@ -42,7 +42,7 @@ function resizeScreen () {
 }
 
 socket = io.connect({
-  path: '/ssh/socket.io'
+  path: '/webssh/socket.io'
 })
 
 term.onData(function (data) {
@@ -136,6 +136,7 @@ socket.on('disconnect', function (err) {
     status.innerHTML =
       'WEBSOCKET SERVER DISCONNECTED: ' + err
   }
+  location.reload();
   socket.io.reconnection(false)
   countdown.classList.remove('active')
 })

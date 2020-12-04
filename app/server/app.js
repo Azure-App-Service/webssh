@@ -18,8 +18,8 @@ let config = {
     port: 2222
   },
   user: {
-    name: null,
-    password: null,
+    name: "root",
+    password: "Docker!",
     privatekey: null
   },
   ssh: {
@@ -113,9 +113,9 @@ var session = require('express-session')({
 var app = express()
 var server = require('http').Server(app)
 var myutil = require('./util')
-myutil.setDefaultCredentials(config.user.name, config.user.password, config.user.privatekey)
+myutil.setDefaultCredentials("root", "Docker!", config.user.privatekey)
 var validator = require('validator')
-var io = require('socket.io')(server, { serveClient: false, path: '/ssh/socket.io' })
+var io = require('socket.io')(server, { serveClient: false, path: '/webssh/socket.io' })
 var socket = require('./socket')
 var expressOptions = require('./expressOptions')
 var favicon = require('serve-favicon')
@@ -128,27 +128,24 @@ if (config.accesslog) app.use(logger('common'))
 app.disable('x-powered-by')
 
 // static files
-app.use('/ssh', express.static(publicPath, expressOptions))
+app.use('/webssh', express.static(publicPath, expressOptions))
 
 // favicon from root if being pre-fetched by browser to prevent a 404
 app.use(favicon(path.join(publicPath,'favicon.ico')));
 
-app.get('/ssh/reauth', function (req, res, next) {
+app.get('/webssh/reauth', function (req, res, next) {
   var r = req.headers.referer || '/'
   res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=' + r + '"></head><body bgcolor="#000"></body></html>')
 })
 
 // eslint-disable-next-line complexity
-app.get('/ssh/host/:host?', function (req, res, next) {
+app.get('/webssh/host', function (req, res, next) {
+  console.log("SSH IP"+req.headers["website_ssh_ip"])
   res.sendFile(path.join(path.join(publicPath, 'client.htm')))
   // capture, assign, and validated variables
   req.session.ssh = {
-    host: config.ssh.host || (validator.isIP(req.params.host + '') && req.params.host) ||
-      (validator.isFQDN(req.params.host) && req.params.host) ||
-      (/^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(req.params.host) &&
-      req.params.host),
-    port: (validator.isInt(req.query.port + '', { min: 1, max: 65535 }) &&
-      req.query.port) || config.ssh.port,
+    host: req.headers["website_ssh_ip"],
+    port: 2222,
     localAddress: config.ssh.localAddress,
     localPort: config.ssh.localPort,
     header: {
@@ -171,8 +168,8 @@ app.get('/ssh/host/:host?', function (req, res, next) {
     allowreauth: config.options.allowreauth || false,
     mrhsession: ((validator.isAlphanumeric(req.headers.mrhsession + '') && req.headers.mrhsession) ? req.headers.mrhsession : 'none'),
     serverlog: {
-      client: config.serverlog.client || false,
-      server: config.serverlog.server || false
+      client: config.serverlog.client || true,
+      server: config.serverlog.server || true
     },
     readyTimeout: (validator.isInt(req.query.readyTimeout + '', { min: 1, max: 300000 }) &&
       req.query.readyTimeout) || config.ssh.readyTimeout
